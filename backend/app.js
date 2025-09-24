@@ -1,15 +1,21 @@
 import express from "express";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import userRoutes from "./src/user/routes/user.routes.js";
 import cookieParser from "cookie-parser";
-import path from "path"
+import path from "path";
+import cors from "cors";
 
-
-
-const configPath = path.resolve("config", ".env")
-dotenv.config({path: configPath})
+const configPath = path.resolve("config", ".env");
+dotenv.config({ path: configPath });
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
