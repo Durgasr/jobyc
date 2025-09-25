@@ -7,63 +7,73 @@ export const Register = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setUser, setLoading } = useContext(UserContext);
-  const role = location.state?.role; // get role from navigation
+  const role = location.state?.role;
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     skills: "",
-    resumeUrl: "",
+    resume: null, // <-- file stored here
     experience: "",
     location: "",
+    company: "",
+    position: "",
+    website: "",
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (files) {
+      setFormData({ ...formData, [name]: files[0] }); // store file object
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const data = new FormData();
+    data.append("role", role);
+    data.append("name", formData.name);
+    data.append("email", formData.email);
+    data.append("password", formData.password);
+
+    if (role === "jobseeker") {
+      data.append(
+        "skills",
+        formData.skills
+          ? formData.skills.split(",").map((s) => s.trim())
+          : []
+      );
+      if (formData.resume) data.append("resume", formData.resume);
+      data.append("experience", formData.experience);
+      data.append("location", formData.location);
+    }
+
+    if (role === "recruiter") {
+      data.append("company", formData.company);
+      data.append("position", formData.position);
+      data.append("website", formData.website);
+    }
+
     try {
-      let payload = { role }; // start with just role
-
-      if (role === "jobseeker") {
-        payload = {
-          ...payload,
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          skills: formData.skills
-            ? formData.skills.split(",").map((s) => s.trim())
-            : [],
-          resumeUrl: formData.resumeUrl,
-          experience: formData.experience,
-          location: formData.location,
-        };
-      }
-
-      if (role === "recruiter") {
-        payload = {
-          ...payload,
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          company: formData.company,
-          position: formData.position,
-          website: formData.website,
-        };
-      }
-
       const res = await axios.post(
         "http://localhost:3700/api/jobyc/user/register",
-        payload,
-        { withCredentials: true }
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
       );
 
       alert("User registered successfully!");
-      setUser(res.data.user); // updates context
+      setUser(res.data.user);
       setLoading(false);
+
       if (res.data.user.role === "jobseeker") navigate("/jobs");
       else if (res.data.user.role === "recruiter") navigate("/dashboard");
     } catch (err) {
@@ -75,7 +85,7 @@ export const Register = () => {
   return (
     <div>
       <h2>Register as {role}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
         <input
           type="text"
           name="name"
@@ -111,10 +121,9 @@ export const Register = () => {
               onChange={handleChange}
             />
             <input
-              type="text"
-              name="resumeUrl"
-              placeholder="Resume URL"
-              value={formData.resumeUrl}
+              type="file"
+              name="resume"
+              accept=".pdf,.doc,.docx"
               onChange={handleChange}
             />
             <input
