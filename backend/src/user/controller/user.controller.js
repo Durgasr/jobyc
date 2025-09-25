@@ -4,13 +4,20 @@ import { ErrorHandler } from "../../../utils/errorHandler.js";
 
 export const createNewUser = async (req, res, next) => {
   try {
-    const newUser = await createNewUserRepo(req.body);
+    const userData = { ...req.body };
+
+    // ✅ If jobseeker, add resume path from multer
+    if (userData.role === "jobseeker" && req.file) {
+      userData.resumeUrl = req.file.path.replace(/\\/g, "/");
+    }
+
+    const newUser = await createNewUserRepo(userData);
     await sendToken(newUser, res, 200);
   } catch (err) {
-    if (err.code == "11000") {
+    if (err.code === 11000) {
       return next(new ErrorHandler(400, "Email already registered"));
     } else {
-      return next(new ErrorHandler(500, err));
+      return next(new ErrorHandler(500, err.message));
     }
   }
 };
@@ -41,7 +48,7 @@ export const userLogin = async (req, res, next) => {
 
 export const getUserDetails = async (req, res, next) => {
   try {
-    console.log(req.user); 
+    console.log(req.user);
     const userDetails = await findUserRepo({ _id: req.user.id });
     res.status(200).json({ success: true, user: userDetails });
   } catch (error) {
