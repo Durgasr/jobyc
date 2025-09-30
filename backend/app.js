@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import userRoutes from "./src/user/routes/user.routes.js";
+import jobsRouter from "./src/jobs/routes/job.routes.js";
 import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
@@ -21,5 +22,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/jobyc/user", userRoutes);
+app.use("/api/jobyc/jobs", jobsRouter);
 
 export default app;
