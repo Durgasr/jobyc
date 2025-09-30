@@ -22,6 +22,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/jobyc/user", userRoutes);
 app.use("/api/jobyc/jobs", jobsRouter);
