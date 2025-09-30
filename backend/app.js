@@ -6,6 +6,7 @@ import applicationsRouter from "./src/jobApplications/routes/jobApplication.rout
 import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
+import { errorHandlerMiddleware } from "./middlewares/errorHandlerMiddleware.js";
 
 const configPath = path.resolve("config", ".env");
 dotenv.config({ path: configPath });
@@ -27,5 +28,8 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/jobyc/user", userRoutes);
 app.use("/api/jobyc/jobs", jobsRouter);
 app.use("/api/jobyc/applications", applicationsRouter);
+
+
+app.use(errorHandlerMiddleware)
 
 export default app;
