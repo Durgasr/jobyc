@@ -37,11 +37,12 @@ export const userLogin = async (req, res, next) => {
 
     const passwordMatch = await user.comparePassword(password);
     if (!passwordMatch) {
-      return next(new ErrorHandler(401, "Invalid email or password!"));
+      return next(
+        new ErrorHandler(401, "Incorrect password, please try again.")
+      );
     }
     await sendToken(user, res, 200);
   } catch (err) {
-    console.log("Caught error:", err);
     return next(new ErrorHandler(400, err));
   }
 };
