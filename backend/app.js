@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
 import { errorHandlerMiddleware } from "./middlewares/errorHandlerMiddleware.js";
+import ProfileRouter from "./src/Profile/routes/profile.routes.js";
 
 const configPath = path.resolve("config", ".env");
 dotenv.config({ path: configPath });
@@ -22,14 +23,15 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static("public"));
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/jobyc/user", userRoutes);
 app.use("/api/jobyc/jobs", jobsRouter);
 app.use("/api/jobyc/applications", applicationsRouter);
+app.use("/api/jobyc/profile", ProfileRouter);
 
-
-app.use(errorHandlerMiddleware)
+app.use(errorHandlerMiddleware);
 
 export default app;
