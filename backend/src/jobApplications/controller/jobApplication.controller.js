@@ -8,12 +8,29 @@ import {
 import { findJobDetailsById } from "../../jobs/models/job.repository.js";
 import { ErrorHandler } from "../../../utils/errorHandler.js";
 import { sendEmail } from "../../../utils/sendEmail.js";
+import { User } from "../../user/models/user.schema.js";
 
 // ✅ Apply to Job
 export const applyToJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const userId = req.user._id;
+
+    // Fetch job seeker profile
+    const jobSeeker = await User.findById(userId);
+    if (!jobSeeker) {
+      return next(new ErrorHandler(404, "Job seeker not found"));
+    }
+
+    // ✅ Check profile progress
+    if (jobSeeker.progress < 80) {
+      return next(
+        new ErrorHandler(
+          403,
+          "Please complete your profile (minimum 80%) before applying."
+        )
+      );
+    }
 
     const existing = await findApplication(jobId, userId);
     if (existing) {
@@ -23,7 +40,7 @@ export const applyToJob = async (req, res, next) => {
     const application = await createApplication(jobId, userId);
     res.status(201).json({ success: true, application });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -36,7 +53,7 @@ export const checkIfApplied = async (req, res, next) => {
     const existing = await findApplication(jobId, userId);
     res.json({ applied: !!existing });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -48,7 +65,7 @@ export const getJobApplications = async (req, res, next) => {
     const applications = await getApplicationsByJob(jobId);
     res.json({ success: true, applications });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -58,7 +75,7 @@ export const getApplicationsCount = async (req, res, next) => {
     const count = await getApplicationsCountByJob(jobId);
     res.json({ success: true, count });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -67,9 +84,14 @@ export const getJobApplicants = async (req, res, next) => {
   try {
     const { jobId } = req.params;
     const applications = await getApplicationsByJob(jobId);
-    res.json({ success: true, applicants: applications });
+    const jobDetails = await findJobDetailsById(jobId);
+    res.json({
+      success: true,
+      applicants: applications,
+      jobDetails: jobDetails,
+    });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -98,7 +120,7 @@ export const viewResume = async (req, res, next) => {
       message: "Applicant notified about resume view",
     });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };
 
@@ -113,7 +135,6 @@ export const viewProfile = async (req, res, next) => {
     }
 
     const job = await findJobDetailsById(application.job);
-    console.log(application, job);
 
     await sendEmail(
       application.applicant.email,
@@ -129,6 +150,6 @@ export const viewProfile = async (req, res, next) => {
       message: "Applicant notified about profile view",
     });
   } catch (err) {
-    next(new ErrorHandler(500, err.message));
+    next(new ErrorHandler(500, err));
   }
 };

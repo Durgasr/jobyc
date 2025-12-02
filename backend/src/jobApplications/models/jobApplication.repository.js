@@ -12,7 +12,7 @@ export const createApplication = async (jobId, userId) => {
 export const getApplicationsByJob = async (jobId) => {
   return await JobApplication.find({ job: jobId }).populate(
     "applicant",
-    "name email location skills experience resumeUrl "
+    "name email location skills totalExperience experience resumeUrl "
   );
 };
 
